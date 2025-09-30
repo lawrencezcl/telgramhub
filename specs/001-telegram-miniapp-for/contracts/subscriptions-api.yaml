@@ -1,0 +1,344 @@
+openapi: 3.0.3
+info:
+  title: TelgramHub Subscriptions API
+  description: API for managing user keyword subscriptions and notifications
+  version: 1.0.0
+
+paths:
+  /api/subscriptions:
+    get:
+      summary: Get user subscriptions
+      description: Retrieve all keyword subscriptions for the authenticated user
+      responses:
+        '200':
+          description: User subscriptions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KeywordSubscription'
+
+    post:
+      summary: Create keyword subscription
+      description: Add a new keyword subscription for the user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordSubscription'
+        '400':
+          description: Invalid request
+        '409':
+          description: Subscription already exists
+
+  /api/subscriptions/{subscriptionId}:
+    put:
+      summary: Update subscription
+      description: Update an existing keyword subscription
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionRequest'
+      responses:
+        '200':
+          description: Subscription updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordSubscription'
+        '404':
+          description: Subscription not found
+
+    delete:
+      summary: Delete subscription
+      description: Remove a keyword subscription
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Subscription deleted
+        '404':
+          description: Subscription not found
+
+  /api/notifications:
+    get:
+      summary: Get user notifications
+      description: Retrieve notifications for the authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: User notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  unreadCount:
+                    type: integer
+
+    put:
+      summary: Mark notifications as read
+      description: Mark notifications as read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notificationIds:
+                  type: array
+                  items:
+                    type: string
+                markAll:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Notifications marked as read
+
+  /api/notifications/{notificationId}:
+    delete:
+      summary: Delete notification
+      description: Delete a specific notification
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Notification deleted
+
+  /api/users/preferences:
+    get:
+      summary: Get user preferences
+      description: Retrieve user notification preferences
+      responses:
+        '200':
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+
+    put:
+      summary: Update user preferences
+      description: Update user notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesRequest'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+
+components:
+  schemas:
+    KeywordSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        keyword:
+          type: string
+        filters:
+          $ref: '#/components/schemas/SubscriptionFilters'
+        isActive:
+          type: boolean
+        matchedChannels:
+          type: array
+          items:
+            type: string
+        lastNotificationAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    SubscriptionFilters:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+        minSubscribers:
+          type: integer
+          minimum: 0
+        languages:
+          type: array
+          items:
+            type: string
+
+    CreateSubscriptionRequest:
+      type: object
+      required:
+        - keyword
+      properties:
+        keyword:
+          type: string
+          minLength: 2
+          maxLength: 50
+        filters:
+          $ref: '#/components/schemas/SubscriptionFilters'
+
+    UpdateSubscriptionRequest:
+      type: object
+      properties:
+        filters:
+          $ref: '#/components/schemas/SubscriptionFilters'
+        isActive:
+          type: boolean
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [new_channel, trending, keyword_match]
+        title:
+          type: string
+        message:
+          type: string
+        channelId:
+          type: string
+        keyword:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        isRead:
+          type: boolean
+        sentVia:
+          type: string
+          enum: [bot, miniapp]
+        createdAt:
+          type: string
+          format: date-time
+        channel:
+          $ref: '#/components/schemas/ChannelSummary'
+
+    ChannelSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        username:
+          type: string
+        subscriberCount:
+          type: integer
+        category:
+          type: string
+
+    UserPreferences:
+      type: object
+      properties:
+        notificationFrequency:
+          type: string
+          enum: [immediate, daily, weekly]
+        maxNotificationsPerDay:
+          type: integer
+          minimum: 1
+          maximum: 50
+        dataRetention:
+          type: string
+          enum: [30days, 90days, indefinite]
+        analyticsOptIn:
+          type: boolean
+
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        notificationFrequency:
+          type: string
+          enum: [immediate, daily, weekly]
+        maxNotificationsPerDay:
+          type: integer
+          minimum: 1
+          maximum: 50
+        dataRetention:
+          type: string
+          enum: [30days, 90days, indefinite]
+        analyticsOptIn:
+          type: boolean
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -1,0 +1,229 @@
+openapi: 3.0.3
+info:
+  title: TelgramHub Channel Discovery API
+  description: API for discovering and managing Telegram channels
+  version: 1.0.0
+
+paths:
+  /api/channels:
+    get:
+      summary: Get popular channels
+      description: Retrieve a paginated list of popular channels with optional filtering
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minSubscribers
+          in: query
+          schema:
+            type: integer
+        - name: maxSubscribers
+          in: query
+          schema:
+            type: integer
+        - name: language
+          in: query
+          schema:
+            type: string
+        - name: activity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Channel'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/channels/search:
+    get:
+      summary: Search channels
+      description: Search channels by keywords and text
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Channel'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  searchQuery:
+                    type: string
+
+  /api/channels/{channelId}:
+    get:
+      summary: Get channel details
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Channel details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannelDetail'
+        '404':
+          description: Channel not found
+
+  /api/channels/{channelId}/join:
+    post:
+      summary: Join channel
+      description: Generate deep link for user to join channel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Join link generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  joinLink:
+                    type: string
+                    format: uri
+
+components:
+  schemas:
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+        telegramId:
+          type: integer
+        username:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        language:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/ChannelMetrics'
+        tags:
+          type: array
+          items:
+            type: string
+        lastPostAt:
+          type: string
+          format: date-time
+
+    ChannelDetail:
+      allOf:
+        - $ref: '#/components/schemas/Channel'
+        - type: object
+          properties:
+            recentPosts:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChannelPost'
+            similarChannels:
+              type: array
+              items:
+                $ref: '#/components/schemas/Channel'
+
+    ChannelMetrics:
+      type: object
+      properties:
+        subscriberCount:
+          type: integer
+        growthRate7d:
+          type: number
+        growthRate30d:
+          type: number
+        postsPerDay:
+          type: number
+        engagementScore:
+          type: number
+
+    ChannelPost:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        views:
+          type: integer
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "name": "telgramhub",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "edge",
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1", "sin1", "fra1"],
+  "env": {
+    "MONGODB_URI": "@mongodb-uri",
+    "KV_REST_API_URL": "@kv-url",
+    "KV_REST_API_TOKEN": "@kv-token",
+    "TELEGRAM_BOT_TOKEN": "@telegram-bot-token",
+    "JWT_SECRET": "@jwt-secret",
+    "NEXT_PUBLIC_MINIAPP_URL": "@miniapp-url"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/channels/search",
+      "destination": "/api/channels/search"
+    },
+    {
+      "source": "/api/channels/(.*)",
+      "destination": "/api/channels/$1"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/telegram",
+      "destination": "https://t.me/telgramhub_bot",
+      "permanent": true
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/update-channels",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-cache",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

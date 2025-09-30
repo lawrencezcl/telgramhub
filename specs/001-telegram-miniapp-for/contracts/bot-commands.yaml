@@ -1,0 +1,132 @@
+# Telegram Bot Commands Specification
+
+## Bot Commands
+
+### /start
+**Description**: Initialize bot and display welcome message
+**Response**: Welcome message with miniapp link and basic instructions
+
+### /discover
+**Description**: Open channel discovery miniapp
+**Response**: Deep link to miniapp with user authentication
+
+### /subscribe <keyword>
+**Description**: Subscribe to keyword for notifications
+**Parameters**:
+- keyword (required): Search keyword (2-50 characters)
+**Response**: Confirmation message with subscription details
+
+### /unsubscribe <keyword>
+**Description**: Unsubscribe from keyword
+**Parameters**:
+- keyword (required): Previously subscribed keyword
+**Response**: Confirmation message
+
+### /subscriptions
+**Description**: List all active keyword subscriptions
+**Response**: Formatted list of current subscriptions with management options
+
+### /search <query>
+**Description**: Quick search for channels
+**Parameters**:
+- query (required): Search terms
+**Response**: Top 5 matching channels with join links
+
+### /trending
+**Description**: Show trending channels
+**Response**: Top 10 trending channels categorized by growth rate
+
+### /preferences
+**Description**: Manage notification preferences
+**Response**: Interactive form for frequency and notification settings
+
+### /privacy
+**Description**: Display privacy policy and data management options
+**Response**: Privacy summary with deletion options
+
+### /help
+**Description**: Show help information and available commands
+**Response**: Command list with descriptions
+
+## Inline Mode Commands
+
+### @telgramhub_bot <query>
+**Description**: Inline search for channels
+**Response**:
+- Title: Channel name
+- Description: Channel description and subscriber count
+- Message text: Join link and category
+
+## Callback Data Patterns
+
+### subscription_management
+- `subscribe:keyword:{keyword}` - Subscribe to keyword
+- `unsubscribe:subscription_id` - Unsubscribe from subscription
+- `toggle_subscription:subscription_id` - Toggle subscription active status
+
+### notification_preferences
+- `freq:immediate` - Set immediate notifications
+- `freq:daily` - Set daily digest
+- `freq:weekly` - Set weekly digest
+- `limit:10` - Set max 10 notifications per day
+- `limit:25` - Set max 25 notifications per day
+
+### privacy_actions
+- `delete_data` - Request account deletion
+- `export_data` - Export user data
+- `analytics_opt_in` - Enable analytics
+- `analytics_opt_out` - Disable analytics
+
+## Message Handling
+
+### Text Messages
+- Free text search: Treat as channel search query
+- Natural language: Parse for subscription commands
+
+### Channel Actions
+- Channel forwarding: Analyze forwarded channel for recommendations
+- Channel links: Extract and analyze linked channels
+
+## Error Responses
+
+### Invalid Commands
+```
+❌ Invalid command. Use /help to see available commands.
+```
+
+### Subscription Errors
+```
+❌ Cannot subscribe to "{keyword}": Already subscribed
+❌ Cannot unsubscribe from "{keyword}": Not found
+```
+
+### Rate Limiting
+```
+⚠️ Too many requests. Please wait {time} before trying again.
+```
+
+## Success Messages
+
+### Subscription Confirmation
+```
+✅ Successfully subscribed to "{keyword}"
+You'll receive notifications when new popular channels match this keyword.
+```
+
+### Preference Updates
+```
+✅ Preferences updated
+Notification frequency: {frequency}
+Max notifications per day: {limit}
+```
+
+## Localization Support
+
+All bot messages support:
+- English (default)
+- Spanish
+- Russian
+- Hindi
+- Chinese (Simplified)
+
+Message templates use parameterized strings for easy localization.
