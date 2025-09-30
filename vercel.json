@@ -1,12 +1,10 @@
 {
   "version": 2,
   "name": "telgramhub",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "functions": {
     "api/**/*.ts": {
       "runtime": "edge",
@@ -15,12 +13,13 @@
   },
   "regions": ["iad1", "sin1", "fra1"],
   "env": {
-    "MONGODB_URI": "@mongodb-uri",
+    "DATABASE_URL": "@database-url",
     "KV_REST_API_URL": "@kv-url",
     "KV_REST_API_TOKEN": "@kv-token",
     "TELEGRAM_BOT_TOKEN": "@telegram-bot-token",
     "JWT_SECRET": "@jwt-secret",
-    "NEXT_PUBLIC_MINIAPP_URL": "@miniapp-url"
+    "NEXT_PUBLIC_APP_URL": "@app-url",
+    "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME": "@telegram-username"
   },
   "headers": [
     {
